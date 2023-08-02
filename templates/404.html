@@ -1,0 +1,27 @@
+{% extends 'base/base.html' %}
+{% block title %}  {{ title }} {% endblock %}
+
+{% block content %}
+
+{% from "_macro.html" import render_field %}
+  
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page not Found!</title>
+</head>
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/error.css') }}">
+<body>
+    <div class="container">
+        <h1>Error 404</h1>
+        <p>Lo sentimos, la página que estás buscando no existe.</p>
+    </div>
+    <br>
+</body>
+</html>
+
+{% endblock %}

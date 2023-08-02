@@ -1,0 +1,3 @@
+PyMySQL>=0.9.3
+retrying>=1.3.3
+logModel>=0.0.1

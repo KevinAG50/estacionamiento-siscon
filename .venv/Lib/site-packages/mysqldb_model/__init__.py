@@ -1,0 +1,5 @@
+from __future__ import absolute_import
+from .myMysqldb import *
+
+__version__ = '1.1.0'
+__license__ = ''

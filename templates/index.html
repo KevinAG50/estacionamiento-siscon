@@ -1,0 +1,99 @@
+{% extends 'base/base.html' %}
+{% block title %}  {{ title }} {% endblock %}
+
+{% block content %}
+
+{% from "_macro.html" import render_field %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/interfaces.css') }}">
+
+<nav class="navbar">
+  <div class="user-name">
+      ESTACIONAMIENTOS SISCON
+  </div>
+  <div class="dropdown">
+      <button class="dropbtn">{{ username }}</button>
+      <div class="dropdown-content">
+          <a href="/logout">Cerrar sesión</a>
+      </div>
+  </div>
+</nav>
+<br>
+<div class="row">
+  <div class="form-group col-sm-5 col-md-6">
+    <br><br>
+    <div class="container">
+      <form action="{{ url_for('registrar_entrada')}}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <h2>Registrar entrada</h2>
+        <div class="form-group">
+            <div style="text-align: center;"><label>Ingresa la hora de llegada:</label></div>
+            <input type="datetime-local" name="hora_entrada" class="form-control" required>
+        </div>
+        <div style="text-align: center;" class="form-group">
+          <input type="submit" value="Registrar">
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="form-group col-sm-5 offset-sm-2 col-md-6 offset-md-0">
+    <div class="container">
+      <form action="{{ url_for('registrar_salida')}}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <h2>Registrar salida</h2>
+        <div class="form-group">
+          <div style="text-align: center;"><label>Ingresa el código de llegada:</label></div>
+          <input type="number" name="idBoleto" class="capacidad-input" required>
+        </div>
+        <div class="form-group">
+          <div style="text-align: center;"><label>Ingresa la hora de salida:</label></div>
+          <input type="datetime-local" name="hora_salida" class="amarillo" required>
+        </div>
+        <div style="text-align: center;" class="form-group-amarillo">
+          <input type="submit" value="Calcular pago">
+        </div>
+        <br>
+      </form>
+    </div>
+  </div>
+</div>
+<br>
+{% if ticket != None %}
+  <div class="containerlistasMid">
+    <h2 style="text-align: center;">Tickets del usuario: {{ username }}</h2>
+    <table>
+        <tr>
+            <th>Codigo del boleto</th>
+            <th>Estacionamiento</th>
+            <th>Hora de entrada</th>
+            <th>Hora de salida</th>
+            <th>Total pagado</th>
+            <th>Estatus del ticket</th>
+        </tr> 
+        {% for boleto in boletos %}
+            <tr>
+                <td>{{ boleto.idBoleto }}</td>
+                <td>{{ boleto.estacionamiento }}</td>
+                <td>{{ boleto.hora_entrada }}</td>
+                {% if boleto.hora_salida == None %}
+                  <td>Sin asignar</td>
+                {% else %}
+                  <td>{{ boleto.hora_salida }}</td>
+                {% endif %} 
+                <td>$ {{ boleto.tarifa }}</td>
+                {% if boleto.estatus == 'Pendiente' %}
+                  <td style="background-color: #dc3545; color: aliceblue;">{{ boleto.estatus }}</td>
+                {% else %}
+                  <td style="background-color: #4CAF50; color: aliceblue;">{{ boleto.estatus }}</td>
+                {% endif %} 
+            </tr>
+        {% endfor %}  
+    </table>
+  </div>
+{% else %}
+  <div class="containerlistas">
+    <h2 style="text-align: center;">!Debes generar por lo menos un ticket para visualizarlo en pantalla!</h2>
+  </div>
+{% endif %} 
+<br>
+{% endblock %}

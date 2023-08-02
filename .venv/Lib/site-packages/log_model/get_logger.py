@@ -1,0 +1,46 @@
+#coding=utf-8
+'''
+function: Log_Model
+args: debug, info, warn, error, critical
+three parameters:file_name, console_level, file_level
+'''
+
+import logging
+import logging.handlers
+import datetime
+
+def getLogger(log_name, **kwargs):
+    log_level = kwargs.get("level", None)
+    log_file = kwargs.get("file", None)
+    if not all([log_level, log_file]):
+        raise ValueError("params is wrong.")
+
+    if log_level == "critical":
+        log_level = logging.CRITICAL
+    elif log_level == "error":
+        log_level = logging.ERROR
+    elif log_level == "warn":
+        log_level = logging.WARNING
+    elif log_level == "info":
+        log_level = logging.INFO
+    elif log_level == "debug":
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.NOTSET
+    # create mylog
+    logger = logging.getLogger(log_name)
+    logger.setLevel(log_level)
+
+    if not logger.handlers:
+        fileHandler = logging.handlers.TimedRotatingFileHandler(log_file, encoding="utf-8", when='midnight', interval=1, backupCount=30, atTime=datetime.time(0, 0, 0, 0))
+        streamHandler = logging.StreamHandler()
+
+        formatter = logging.Formatter(fmt='%(asctime)s.%(msecs)03d - %(name)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+
+        fileHandler.setFormatter(formatter)
+        streamHandler.setFormatter(formatter)
+
+        logger.addHandler(fileHandler)
+        logger.addHandler(streamHandler)
+
+    return logger

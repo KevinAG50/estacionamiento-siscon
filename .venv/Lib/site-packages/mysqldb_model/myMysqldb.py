@@ -1,0 +1,154 @@
+'''
+save_model: mysqlDB
+    args: host, name. password, database, charset
+'''
+
+import pymysql
+import log_model
+from retrying import retry
+
+class myMysqlDB():
+    def __init__(self, host, user, password, db, charset):
+        self.host = host
+        self.user = user
+        self.password = password
+        self.db = db
+        self.charset = charset
+        self.cursor = None
+        self.conn = None
+        self.mysql_log = None
+
+    @retry(stop_max_attempt_number=3)
+    def connMysql(self, log_name, level, file_path,):
+        self.mysql_log = log_model.getLogger(log_name, level=level, file=file_path)
+        try:
+            self.conn.ping()
+            self.cursor = self.conn.cursor()
+        except:
+            self.conn = pymysql.connect(host=self.host, user=self.user, password=self.password, db=self.db, charset=self.charset)
+            self.cursor = self.conn.cursor()
+
+    def close(self):
+        self.cursor.close()
+        self.conn.close()
+
+    def query(self, table, value, condition):
+        query_sql = "select {value} from {table} ".format(value=value, table=table) + condition
+        try:
+            self.cursor.execute(query_sql)
+            rows = self.cursor.fetchall()
+            return rows
+        except Exception as err:
+            self.mysql_log.error(err)
+            self.mysql_log.info(query_sql)
+            self.conn.rollback()
+            return ''
+
+    def query_simple(self, str_sql, condition):
+        query_sql = str_sql + condition
+        try:
+            self.cursor.execute(query_sql)
+            rows = self.cursor.fetchall()
+            return rows
+        except Exception as err:
+            self.mysql_log.error(err)
+            self.conn.rollback()
+            return ''
+
+    def insert(self, table, data):
+        keys = ', '.join(data.keys())
+        values = ', '.join(['%s'] * len(data))
+        insert_sql = "insert into {table} ({keys}) values ({values})".format(table=table, keys=keys, values=values)
+        insert_sql = insert_sql.replace('\'None\'', 'null')
+        try:
+            count = self.cursor.execute(insert_sql, tuple(data.values()))
+            id = self.conn.insert_id()
+            self.conn.commit()
+        except Exception as err:
+            self.mysql_log.error(err)
+            self.mysql_log.info(insert_sql)
+            self.conn.rollback()
+            return (0, 0)
+        return (count, id)
+
+    def insert_batch(self, table, keys, data_list):
+        values = ', '.join(['%s'] * len(keys.split(",")))
+        insert_sql = "insert into {table} ({keys}) values ({values})".format(table=table, keys=keys, values=values)
+        # insert_sql = insert_sql.replace('\'None\'', 'null')
+
+        try:
+            count = self.cursor.executemany(insert_sql, data_list)
+            id = self.conn.insert_id()
+            self.conn.commit()
+        except Exception as err:
+            self.mysql_log.error(err)
+            self.conn.rollback()
+            return (0, 0)
+        return (count, id)
+
+    def insert_batch_update(self, table, data, data_list):
+        keys = ', '.join(data.keys())
+        values = ', '.join(['%s'] * len(data))
+        insert_sql = "insert into {table} ({keys}) values ({values})".format(table=table, keys=keys, values=values)
+
+        try:
+            count = self.cursor.executemany(insert_sql, data_list)
+            id = self.conn.insert_id()
+            self.conn.commit()
+        except Exception as err:
+            self.conn.rollback()
+            return (0, 0)
+        return (count, id)
+
+    def update(self, table, data, condition):
+        update_sql = "update {table} set ".format(table=table) + ','.join([" {key} = %s".format(key=key) for key in data]) + condition
+        update_count = None
+        try:
+            update_count = self.cursor.execute(update_sql, tuple(data.values()))
+            self.conn.commit()
+        except Exception as err:
+            self.mysql_log.error(err)
+            self.mysql_log.info(update_sql)
+            self.conn.rollback()
+        return update_count
+
+    def update_batch(self, table, keys, data_list, condition):
+        update_sql = "update {table} set ".format(table=table) + ','.join([" {key} = %s".format(key=key) for key in keys.split(",")]) + condition
+        try:
+            update_count = self.cursor.executemany(update_sql, data_list)
+            self.conn.commit()
+            return update_count
+        except Exception as err:
+            self.mysql_log.error(err)
+            self.conn.rollback()
+
+    def update_batch_update(self, table, data, data_list, condition):
+        update_sql = "update {table} set ".format(table=table) + ','.join([" {key} = %s".format(key=key) for key in data]) + condition
+        try:
+            update_count = self.cursor.executemany(update_sql, data_list)
+            self.conn.commit()
+            return update_count
+        except Exception as err:
+            self.mysql_log.error(err)
+            self.mysql_log.info("{update_sql}".format(update_sql=update_sql))
+            self.conn.rollback()
+
+    def delete(self, table, condition):
+        delete_sql = "delete from {table} ".format(table=table) + condition
+        try:
+            self.cursor.execute(delete_sql)
+            self.conn.commit()
+        except Exception as err:
+            self.mysql_log.error(err)
+            self.mysql_log.info("{delete_sql}".format(delete_sql=delete_sql))
+            self.conn.rollback()
+
+    def delete_batch(self, table, data_list, condition):
+        update_sql = "delete from {table} ".format(table=table) + condition
+        try:
+            update_count = self.cursor.executemany(update_sql, data_list)
+            self.conn.commit()
+            return update_count
+        except Exception as err:
+            self.mysql_log.error(err)
+            self.conn.rollback()

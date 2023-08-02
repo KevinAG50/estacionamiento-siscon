@@ -1,0 +1,157 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    padding: 20px;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.navbar {
+    background-color: #333;
+    color: #fff;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 5px;
+}
+
+.navbar .user-name {
+    font-weight: bold;
+}
+
+.navbar .dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.navbar .dropbtn {
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.navbar .dropbtn:hover {
+    background-color: #45a049;
+}
+
+.form-group input[type="text"]{
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+.navbar .dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    right: 0;
+}
+
+.navbar .dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.navbar .dropdown-content a {
+    color: #333;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.navbar .dropdown-content a:hover {
+    background-color: #f2f2f2;
+}
+
+.container {
+    max-width: 100%;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  }
+  
+  .container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-group .form-switch {
+    display: flex;
+    align-items: center;
+  }
+  
+  .form-group .form-switch input[type="checkbox"] {
+    margin-right: 5px;
+  }
+  
+  .form-group .form-switch label {
+    margin-bottom: 0;
+  }
+  
+  .registro-form {
+    display: none;
+  }
+  
+  .form-buttons {
+    text-align: center;
+  }
+  
+  .form-buttons button {
+    margin-right: 10px;
+  }
+
+  .form-group input[type="submit"] {
+    width: 80%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  
+  .form-group input[type="submit"]:hover {
+    background-color: #247228;
+  }
+
+  .container {
+    text-align: center;
+    padding-top: 50px;
+}
+
+.btn {
+  display: inline-block;
+  width: 80%;
+  padding: 10px 20px;
+  font-size: 16px;
+  text-decoration: none;
+  background-color: #4CAF50;
+  color: #fff;
+  border-radius: 5px;
+  border: 1px solid #4CAF50;
+  transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+  background-color: #247228;
+}
+
+.btn:visited {
+  color: #fff;
+}

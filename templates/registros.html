@@ -1,0 +1,108 @@
+{% extends 'base/base.html' %}
+{% block title %}  {{ title }} {% endblock %}
+
+{% block content %}
+
+{% from "_macro.html" import render_field %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/interfaces.css') }}">
+
+<nav class="navbar">
+  <div class="user-name">
+      ESTACIONAMIENTOS SISCON
+  </div>
+  <div class="dropdown">
+      <button class="dropbtn">{{ username }}</button>
+      <div class="dropdown-content">
+          <a href="/admin">Regresar</a>
+          <a href="/logout">Cerrar sesión</a>
+      </div>
+  </div>
+</nav>
+<br>
+<div class="container">
+
+    <form  id="registros-form" method="POST">
+        <input type="hidden" name="csrf_token"  value="{{ csrf_token() }}" />
+        <h2>Visualizar registros de estacionamientos</h2>
+        <div style="text-align: center;"><label>Nombre del Estacionamiento:</label></div>
+        <select name="estacionamiento" required>
+            <option value="" disabled selected>Selecciona un estacionamiento</option>
+            {% for estacionamiento in estacionamientos %}
+                <option value="{{ estacionamiento.nombreE }}">{{ estacionamiento.nombreE }}</option>
+            {% endfor %}
+        </select>
+        <br><br>
+        {{form.honeypot}}
+        <div style="text-align: center;" class="form-group">
+            <input type="submit" value="Visualizar">
+        </div>
+    </form>
+</div>
+<br>
+{% if estacionamiento == None %}
+    <div class="containerlistas">
+        <h2 style="text-align: center;">Suma total de registros del estacionamiento:</h2>
+        <table>
+            <tr>
+                <th>Total</th>
+            </tr>
+            <tr>
+                <td>$ 0</td>
+            </tr>
+        </table>
+    </div>
+    <br>
+    <div class="containerlistasMid">
+        <h2 style="text-align: center;">Registros del estacionamiento:</h2>
+        <table>
+            <tr>
+                <th>Usuario</th>
+                <th>Total pagado</th>
+                <th>Estatus</th>
+            </tr>
+            <tr>
+                <td>Sin asignar</td>
+                <td>$ 0</td>
+                <td style="background-color: #008080; color: #fff;">No aplica</td>
+            </tr>
+        </table>
+    </div>
+{% else %}
+    <div class="containerlistas">
+        <h2 style="text-align: center;">Suma total de registros del estacionamiento:</h2>
+        <table>
+            <tr>
+                <th>Total</th>
+            </tr>
+            <tr>
+                <td>$ {{ suma_total_pagos }}</td>
+            </tr>
+        </table>
+    </div>
+    <br>
+    <div class="containerlistasMid">
+        <h2 style="text-align: center;">Registros del estacionamiento:</h2>
+        <table>
+            <tr>
+                <th>Usuario</th>
+                <th>Total pagado</th>
+                <th>Estatus</th>
+            </tr>
+            {% for boleto in boletos %}
+                <tr>
+                    <td>{{ boleto.usuario }}</td>
+                    <td>$ {{ boleto.tarifa }}</td>
+                    {% if boleto.estatus == 'Pendiente' %}
+                        <td style="background-color: #dc3545; color: aliceblue;">{{ boleto.estatus }}</td>
+                    {% else %}
+                        <td style="background-color: #4CAF50; color: aliceblue;">{{ boleto.estatus }}</td>
+                    {% endif %} 
+                </tr>
+            {% endfor %}  
+        </table>
+    </div>
+{% endif %}
+<br>
+
+{% endblock %}
