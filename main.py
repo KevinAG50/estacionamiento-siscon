@@ -2,7 +2,6 @@
 
 #use flask
 
-from types import NoneType
 from flask import Flask, get_flashed_messages, render_template, request, make_response, session
 from flask import redirect, url_for, flash, g, json, copy_current_request_context
 from flask_mail import Mail, Message
