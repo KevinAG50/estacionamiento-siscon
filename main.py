@@ -128,9 +128,14 @@ def create():
         return redirect(url_for('create'))
     else:
         username = create_form.username.data
+        email = create_form.email.data
         user = User.query.filter_by(username = username).first()
+        email = User.query.filter_by(email = email).first()
         if user is not None:
             error_message = 'El usuario ya se encuentra registrado!'
+            flash(error_message) 
+        elif email is not None:
+            error_message = 'El correo electrónico ya se ha utilizado!'
             flash(error_message)
     return render_template('create.html', title = title, form = create_form, estacionamientos = estacionamientos)
 
