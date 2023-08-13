@@ -7,10 +7,9 @@ class Config(object):
     MAIL_USE_SSL = False
     MAIL_USE_TLS = True
     MAIL_USERNAME = '20203tn005@utez.edu.mx'
-    MAIL_PASSWORD = os.environ.get('PASSWORD_EMAIL_CF')
+    MAIL_PASSWORD = 'KevinAG50'
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:20203tn005*@localhost/flask'  
-    #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://admin:cisco123@base-equipo-kevin.cp3w2sam1cft.us-east-1.rds.amazonaws.com/estacionamientos_siscon'    
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://admin:cisco123@base-equipo-kevin.cp3w2sam1cft.us-east-1.rds.amazonaws.com/estacionamientos_siscon'    
     SQLALCHEMY_TRACK_MODIFICATIONS = False

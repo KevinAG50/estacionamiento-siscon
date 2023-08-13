@@ -23,7 +23,7 @@ class LoginForm(Form):
 class usersForm(Form):
     username = StringField(
         "username",
-        [validators.length(min = 4, max = 50), validators.DataRequired()],
+        [validators.length(min = 4, max = 25), validators.DataRequired()],
     )
     email = EmailField(
         "Correo electronico",
@@ -31,12 +31,12 @@ class usersForm(Form):
     )
     password = PasswordField('Contraseña', [
         validators.DataRequired(),
-        validators.Length(min=8, max=50, message='La contraseña debe tener entre 8 y 50 caracteres'),
+        validators.Length(min=8, max=200, message='La contraseña debe tener entre 8 y 50 caracteres'),
         validators.Regexp(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$',
                           message='La contraseña debe contener al menos una letra mayúscula, una letra minúscula, un número y un carácter especial')
     ])
     estacionamiento = StringField('estacionamiento',
-        [validators.length(min = 7, max = 50), validators.DataRequired()
+        [validators.length(min = 7, max = 25), validators.DataRequired()
     ])
 
     @validates('username')
@@ -56,14 +56,14 @@ class usersForm(Form):
 
 class EstacionamientoForm(Form):
     nombreE = StringField('nombreE',
-        [validators.length(min = 7, max = 50), validators.DataRequired()
+        [validators.length(min = 7, max = 25), validators.DataRequired()
     ])
     capacidad = IntegerField(
         'capacidad', 
-        [validators.data_required()
+        [validators.NumberRange(min=1, max=9999), validators.data_required()
     ])
     codigo_postal = IntegerField('codigo_postal',
-        [validators.data_required()
+        [validators.NumberRange(min=1000, max=999998), validators.data_required()
     ])
 
     def validate_nombreE(form,field):
@@ -76,35 +76,23 @@ class EstacionamientoForm(Form):
 class tarifasForm(Form):
     tiempo_tol = IntegerField(
         'tiempo_tol', 
-        [validators.data_required()
+        [validators.NumberRange(min=1, max=9999), validators.data_required()
     ])
     dos_horas = IntegerField(
         'dos_horas', 
-        [validators.data_required()
+        [validators.NumberRange(min=1, max=9999), validators.data_required()
     ])
     hora_extra = IntegerField(
         'hora_extra', 
-        [validators.data_required()
-    ])
-    pension_dia = IntegerField(
-        'pension_dia', 
-        [validators.data_required()
-    ])
-    pension_semana = IntegerField(
-        'pension_semana', 
-        [validators.data_required()
-    ])
-    pension_mes = IntegerField(
-        'pension_mes', 
-        [validators.data_required()
+        [validators.NumberRange(min=1, max=9999), validators.data_required()
     ])
     estacionamiento = StringField('estacionamiento',
-        [validators.length(min=7, max=50),validators.DataRequired()
+        [validators.length(min=7, max=25),validators.DataRequired()
     ])
 
 
 class registrosForm(Form):
     estacionamiento = StringField('estacionamiento',
-        [validators.length(min = 7, max = 50), validators.DataRequired()
+        [validators.length(min = 7, max = 25), validators.DataRequired()
     ])
 

@@ -1,7 +1,5 @@
 #.venv\Scripts\activate
 
-#use flask
-
 from flask import Flask, get_flashed_messages, render_template, request, make_response, session
 from flask import redirect, url_for, flash, g, json, copy_current_request_context
 from flask_mail import Mail, Message
@@ -13,11 +11,13 @@ from helper import date_format
 from flask_wtf.csrf import CSRFProtect
 import forms 
 from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
 csrf = CSRFProtect(app)
 mail = Mail()
+db.init_app(app)
 
 def send_email(user_email, username):
     msg = Message('Gracias por tu registro!', sender=app.config['MAIL_USERNAME'], recipients=[user_email])
@@ -31,21 +31,30 @@ def page_not_found(e):
 
 @app.before_request
 def before_request():
+    endpoints_prohibidos_sin = ['admin', 'eliminar', 'boletos', 'estacionamientos', 'tarifas', 'usuarios', 'eliminar_usuarios', 'registros', 'registrar_entrada', 'registrar_salida']
+    endpoints_prohibidos_con = ['admin', 'eliminar', 'boletos', 'estacionamientos', 'tarifas', 'usuarios', 'eliminar_usuarios', 'registros']
+
     admin = User.query.filter_by(username = 'admin').first()
     if admin is None:
-        estacionamiento = Estacionamientos(nombreE = 'Estacionamiento A', capacidad = 50, codigo_postal = 15935)
+        estacionamiento = Estacionamientos(nombreE = 'Estacionamiento A', capacidad = 50, codigo_postal = 159357)
         db.session.add(estacionamiento)
         db.session.commit()
-        tarifa = Tarifas(tiempo_tol = 15, dos_horas = 20, hora_extra = 20, pension_dia = 200, pension_semana = 1000, pension_mes = 4000, estacionamiento = 'Estacionamiento A')
+        tarifa = Tarifas(tiempo_tol = 15, dos_horas = 20, hora_extra = 20, estacionamiento = 'Estacionamiento A')
         db.session.add(tarifa)
         db.session.commit()
-        admin = User(username = 'admin', email = '20203tn005@utez.edu.mx', password = 'admin123', estacionamiento = 'Estacionamiento A')
+        admin = User(username = 'admin', email = '20203tn005@utez.edu.mx', password = 'admin123*', estacionamiento = 'Estacionamiento A')
         db.session.add(admin)
         db.session.commit()
-    if 'username' not in session and request.endpoint in ['admin','eliminar','boletos','estacionamientos','tarifas','usuarios','eliminar_usuarios','registros','registrar_entrada','registrar_salida']:
+    if 'username' not in session and request.endpoint in endpoints_prohibidos_sin:
         flash('Debes iniciar sesión!')
         return redirect(url_for('login'))
-    elif 'username' in session and request.endpoint in ['login']:
+    elif 'username' in session and session['username'] != 'admin' and request.endpoint in endpoints_prohibidos_con:
+        flash('Acceso restringido para usuarios que no son administradores!')
+        return redirect(url_for('index'))
+    elif 'username' in session and session['username'] == 'admin' and request.endpoint in ['login','create']:
+        flash('Hay una sesión activa!')
+        return redirect(url_for('admin'))
+    elif 'username' in session and request.endpoint in ['login','create']:
         flash('Hay una sesión activa!')
         return redirect(url_for('index'))
 
@@ -156,9 +165,6 @@ def estacionamientos():
         tarifa = Tarifas(tiempo_tol=15,
                         dos_horas=20,
                         hora_extra=20,
-                        pension_dia=200,
-                        pension_semana=1000,
-                        pension_mes=4000,
                         estacionamiento=estacionamiento_form.nombreE.data)
         db.session.add(tarifa)
         db.session.commit()
@@ -187,10 +193,7 @@ def tarifas():
         estacionamiento_data = {
             'tiempo_tol': tarifas_form.tiempo_tol.data,
             'dos_horas': tarifas_form.dos_horas.data,
-            'hora_extra': tarifas_form.hora_extra.data,
-            'pension_dia': tarifas_form.pension_dia.data,
-            'pension_semana': tarifas_form.pension_semana.data,
-            'pension_mes': tarifas_form.pension_mes.data
+            'hora_extra': tarifas_form.hora_extra.data
         }
 
         Tarifas.query.filter_by(estacionamiento=tarifas_form.estacionamiento.data).update(estacionamiento_data)
@@ -239,9 +242,12 @@ def eliminar_usuario():
         idUsuario = request.form['idUsuario']
         usuario = User.query.get(idUsuario)
         if usuario:
-            db.session.delete(usuario)
-            db.session.commit()
-            flash('Usuario eliminado correctamente!', 'success')
+            if usuario.idUsuario == 1:
+                flash('No puedes eliminar al creador de todo!', 'danger')
+            else:
+                db.session.delete(usuario)
+                db.session.commit()
+                flash('Usuario eliminado correctamente!', 'success')
         else:
             flash('No se encontró el usuario a eliminar!', 'danger')
     return redirect(url_for('usuarios'))
@@ -264,6 +270,8 @@ def registrar_entrada():
         db.session.commit()
         flash('Hora de entrada registrada éxitosamente!')
         return redirect(url_for('index'))
+    else:
+        return redirect(url_for('index'))
 
 def calcular_precio(tiempo_mins):
     print("tiempo: ",tiempo_mins)
@@ -271,7 +279,6 @@ def calcular_precio(tiempo_mins):
     datos_user = User.query.filter_by(username=nombre).first()
     tarifa = Tarifas.query.filter_by(estacionamiento=datos_user.estacionamiento).first()
 
-    tiempo_horas = tiempo_mins / 60 
     print("tiempo minutos",tiempo_mins)
     if tiempo_mins <= tarifa.tiempo_tol:
         total = 0.0
@@ -280,35 +287,16 @@ def calcular_precio(tiempo_mins):
     else:
         horas_adicionales = (tiempo_mins - 120) / 60 
         total = tarifa.dos_horas + (horas_adicionales * tarifa.hora_extra)
-
-    dias_completos = tiempo_horas // 24
-
-    if dias_completos >= 1:
-        total = min(total, dias_completos * tarifa.pension_dia)
-
-    semanas_completas = tiempo_horas // (24 * 7)
-
-    if semanas_completas >= 1:
-        total = min(total, semanas_completas * tarifa.pension_semana)
-
-    meses_completos = tiempo_horas // (24 * 30)
-
-    if meses_completos >= 1:
-        total = min(total, meses_completos * tarifa.pension_mes)
-
     return total
 
 @app.route('/registrar_salida', methods = ['GET', 'POST'])
 def registrar_salida():
     nombre = session['username']
     datos_user = User.query.filter_by(username = nombre).first()
-    boleto = Boletos.query.filter_by(idBoleto = request.form['idBoleto']).first()
-
-    if boleto is not None:
-
-        if boleto.estatus == 'Pendiente':
-
-            if request.method == 'POST':
+    if request.method == 'POST':
+        boleto = Boletos.query.filter_by(idBoleto = request.form['idBoleto']).first()
+        if boleto is not None:
+            if boleto.estatus == 'Pendiente':
 
                 Boletos.query.filter_by(idBoleto = boleto.idBoleto).update({'hora_salida': request.form['hora_salida']})
                 db.session.commit()
@@ -327,12 +315,12 @@ def registrar_salida():
                 db.session.add(pago)
                 db.session.commit()
                 flash('Boleto pagado correctamente!')
-        else:
-            total_a_pagar = 0
-            success_message = 'El pago de este boleto ya se ha realizado!'
-            flash(success_message)
-    else: 
-        flash('El boleto no se encuentra registrado!', 'danger') 
+            else:
+                total_a_pagar = 0
+                success_message = 'El pago de este boleto ya se ha realizado!'
+                flash(success_message)
+        else: 
+            flash('El boleto no se encuentra registrado!', 'danger') 
     return redirect(url_for('index'))
 
 @app.route('/registros', methods = ['GET', 'POST'])
@@ -360,7 +348,6 @@ def ajax_login():
 
 if __name__ == '__main__':
     csrf.init_app(app)
-    db.init_app(app)
     mail.init_app(app)
 
     with app.app_context():
