@@ -6,6 +6,29 @@
 {% from "_macro.html" import render_field %}
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/interfaces.css') }}">
+<style>
+  /* Estilos para el fondo oscurecido y la ventana emergente */
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .popup {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    text-align: center;
+  }
+</style>
+
 {% if username == 'admin' %}
   <nav class="navbar">
     <div class="user-name">
@@ -33,6 +56,7 @@
   </nav>
 {% endif %} 
 <br>
+
 <div class="row">
   <div class="form-group col-sm-5 col-md-6">
     <br><br>
@@ -110,4 +134,22 @@
   </div>
 {% endif %} 
 <br>
+
+<script>
+  const openPopupLink = document.getElementById('openPopup');
+  const popup = document.getElementById('popup');
+  const confirmButton = document.getElementById('confirmButton');
+  const cancelButton = document.getElementById('cancelButton');
+
+  openPopupLink.addEventListener('click', (event) => {
+    event.preventDefault();
+    popup.style.display = 'flex';
+  });
+
+  cancelButton.addEventListener('click', () => {
+    popup.style.display = 'none';
+  });
+  
+  </script>
+  
 {% endblock %}

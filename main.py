@@ -254,7 +254,7 @@ def eliminar_usuario():
 
 @app.route('/inicio', methods = ['GET', 'POST'])
 def index():
-    title = "Index"
+    title = "SISCON"
     username = session['username']
     boletos = Boletos.query.filter_by(usuario = username).all()
     ticket = Boletos.query.filter_by(usuario = username).first()
@@ -295,26 +295,30 @@ def registrar_salida():
     datos_user = User.query.filter_by(username = nombre).first()
     if request.method == 'POST':
         boleto = Boletos.query.filter_by(idBoleto = request.form['idBoleto']).first()
+        print(nombre)
         if boleto is not None:
             if boleto.estatus == 'Pendiente':
+                if boleto.usuario == nombre:
 
-                Boletos.query.filter_by(idBoleto = boleto.idBoleto).update({'hora_salida': request.form['hora_salida']})
-                db.session.commit()
-                hora_entrada = datetime.strptime(str(boleto.hora_entrada), '%Y-%m-%d %H:%M:%S')
-                hora_salida = datetime.strptime(str(boleto.hora_salida), '%Y-%m-%d %H:%M:%S')
+                    Boletos.query.filter_by(idBoleto = boleto.idBoleto).update({'hora_salida': request.form['hora_salida']})
+                    db.session.commit()
+                    hora_entrada = datetime.strptime(str(boleto.hora_entrada), '%Y-%m-%d %H:%M:%S')
+                    hora_salida = datetime.strptime(str(boleto.hora_salida), '%Y-%m-%d %H:%M:%S')
 
-                tiempo = hora_salida - hora_entrada
-                #Tiempo convertido a minutos
-                tiempo_mins = tiempo.total_seconds() / 60
+                    tiempo = hora_salida - hora_entrada
+                    #Tiempo convertido a minutos
+                    tiempo_mins = tiempo.total_seconds() / 60
 
-                total_a_pagar = calcular_precio(tiempo_mins)
+                    total_a_pagar = calcular_precio(tiempo_mins)
 
-                Boletos.query.filter_by(idBoleto = request.form['idBoleto']).update(dict(tarifa = total_a_pagar, estatus = 'Pagado'))
-                db.session.commit()
-                pago = Pagos(usuario = nombre, total_pago = total_a_pagar, estacionamiento = datos_user.estacionamiento)
-                db.session.add(pago)
-                db.session.commit()
-                flash('Boleto pagado correctamente!')
+                    Boletos.query.filter_by(idBoleto = request.form['idBoleto']).update(dict(tarifa = total_a_pagar, estatus = 'Pagado'))
+                    db.session.commit()
+                    pago = Pagos(usuario = nombre, total_pago = total_a_pagar, estacionamiento = datos_user.estacionamiento)
+                    db.session.add(pago)
+                    db.session.commit()
+                    flash('Boleto pagado correctamente!')
+                else:
+                    flash('Te agradecemos que seas caritativo, pero no puedes pagar boletos de otras personas!')
             else:
                 total_a_pagar = 0
                 success_message = 'El pago de este boleto ya se ha realizado!'
