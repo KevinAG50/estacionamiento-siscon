@@ -7,7 +7,7 @@ class Config(object):
     MAIL_USE_SSL = False
     MAIL_USE_TLS = True
     MAIL_USERNAME = '20203tn005@utez.edu.mx'
-    MAIL_PASSWORD = 'KevinAG50'
+    MAIL_PASSWORD = os.environ.get('PASSWORD_EMAIL_CF')
 
 class DevelopmentConfig(Config):
     DEBUG = True
