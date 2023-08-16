@@ -134,22 +134,5 @@
   </div>
 {% endif %} 
 <br>
-
-<script>
-  const openPopupLink = document.getElementById('openPopup');
-  const popup = document.getElementById('popup');
-  const confirmButton = document.getElementById('confirmButton');
-  const cancelButton = document.getElementById('cancelButton');
-
-  openPopupLink.addEventListener('click', (event) => {
-    event.preventDefault();
-    popup.style.display = 'flex';
-  });
-
-  cancelButton.addEventListener('click', () => {
-    popup.style.display = 'none';
-  });
-  
-  </script>
   
 {% endblock %}

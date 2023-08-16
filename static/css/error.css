@@ -20,3 +20,34 @@ p {
     font-size: 24px;
     color: #333;
 }
+
+
+.form-buttons {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .btn {
+    display: inline-block;
+    width: 35%;
+    padding: 10px 20px;
+    font-size: 16px;
+    text-decoration: none;
+    background-color: #4CAF50;
+    color: #fff;
+    border-radius: 5px;
+    border: 1px solid #4CAF50;
+    transition: background-color 0.3s ease;
+  }
+  
+  .btn-login:visited {
+    color: #fff; 
+  }
+  
+  .btn:hover {
+    background-color: #247228;
+  }
+  
+  .btn:visited {
+    color: #fff;
+  }

@@ -18,13 +18,13 @@
     <input type="hidden" name="csrf_token"  value="{{ csrf_token() }}" />
     <h2>Iniciar sesión</h2>
       <div class="form-group">
-          <label>Nombre de usuario:</label>
-          {{ form.username }}
+        <label>Nombre de usuario:</label>
+        {{ form.username }}
         <p class="help-block text-danger"></p>     
       </div>
       <div class="form-group">
-          <label>Contraseña:</label>
-          {{ form.password }}
+        <label>Contraseña:</label>
+        {{ form.password }}
         <p class="help-block text-danger"></p>
       </div>
       {{form.honeypot}}

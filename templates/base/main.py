@@ -18,6 +18,10 @@ app.config.from_object(DevelopmentConfig)
 csrf = CSRFProtect(app)
 mail = Mail()
 db.init_app(app)
+csrf.init_app(app)
+mail.init_app(app)
+with app.app_context():
+    db.create_all()
 
 def send_email(user_email, username):
     msg = Message('Gracias por tu registro!', sender=app.config['MAIL_USERNAME'], recipients=[user_email])
@@ -362,11 +366,7 @@ def ajax_login():
     return json.dumps(response)
 
 
-if __name__ == '__main__':
-    csrf.init_app(app)
-    mail.init_app(app)
 
-    with app.app_context():
-        db.create_all()
+if __name__ == '__main__':
 
     app.run(port=8000)

@@ -7,43 +7,29 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="https://icons.iconarchive.com/icons/icons-land/multiple-smiley/128/Auto-Angry-icon.png" type="img/angry_car.ico">
+    <link rel="icon" href="{{ url_for('static', filename='img/angry_car.ico') }}" type="image/x-icon">
     <title>{% block title %}  {% endblock %}</title>
-    <style>
-        .alert {
-            position: relative;
-            padding-right: 40px; /* Espacio para la "X" */
-        }
-
-        .close {
-            position: absolute;
-            top: 0.75rem;
-            right: 1.25rem;
-            color: inherit;
-        }
-    </style>
-</head>
-<body>
-
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
-    {% block content %}
-    {% endblock %}
-    
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message[1] }} alert-dismissible fade show" role="alert">
+                {{ message[0] }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+  {% endwith %} 
+
+  {% block content %}
+  {% endblock %}
 
     <footer style="color: aliceblue;">
         <div class="container">

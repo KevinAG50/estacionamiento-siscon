@@ -21,6 +21,16 @@
         <p>Lo sentimos, la página que estás buscando no existe.</p>
     </div>
     <br>
+    {% if username == 'admin' %}
+        <div class="form-buttons">
+            <a href="/admin" class="btn">Regresar</a>
+        </div>
+    {% else %}
+        <div class="form-buttons">
+            <a href="/inicio" class="btn">Regresar</a>
+        </div>
+    {% endif %} 
+    <br>
 </body>
 </html>
 
