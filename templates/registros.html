@@ -20,25 +20,48 @@
   </div>
 </nav>
 <br>
-<div class="container">
 
-    <form  id="registros-form" method="POST">
-        <input type="hidden" name="csrf_token"  value="{{ csrf_token() }}" />
-        <h2>Visualizar registros de estacionamientos</h2>
-        <div style="text-align: center;"><label>Nombre del Estacionamiento:</label></div>
-        <select name="estacionamiento" required>
-            <option value="" disabled selected>Selecciona un estacionamiento</option>
-            {% for estacionamiento in estacionamientos %}
-                <option value="{{ estacionamiento.nombreE }}">{{ estacionamiento.nombreE }}</option>
-            {% endfor %}
-        </select>
-        <br><br>
-        {{form.honeypot}}
-        <div style="text-align: center;" class="form-group">
-            <input type="submit" value="Visualizar">
+
+<div class="row">
+    <div class="form-group col-sm-5 col-md-6">
+        <br>
+        <div class="container">
+            <form  id="registros-form" method="POST">
+                <input type="hidden" name="csrf_token"  value="{{ csrf_token() }}" />
+                <h2>Visualizar registros de estacionamientos</h2>
+                <div style="text-align: center;"><label>Nombre del Estacionamiento:</label></div>
+                <select name="estacionamiento" required>
+                    <option value="" disabled selected>Selecciona un estacionamiento</option>
+                    {% for estacionamiento in estacionamientos %}
+                        <option value="{{ estacionamiento.nombreE }}">{{ estacionamiento.nombreE }}</option>
+                    {% endfor %}
+                </select>
+                <br><br>
+                {{form.honeypot}}
+                <div style="text-align: center;" class="form-group">
+                    <input type="submit" value="Visualizar">
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
+    <div class="form-group col-sm-5 offset-sm-2 col-md-6 offset-md-0">
+        <div class="container">
+          <form action="{{ url_for('registrar_por_admin')}}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <h2>Pagar Boleto</h2>
+            <div class="form-group">
+              <div style="text-align: center;"><label>Ingresa el código del boleto:</label></div>
+              <input type="number" name="idBoleto" class="capacidad-input" required>
+            </div>
+            <div style="text-align: center;" class="form-group-azul">
+              <input type="submit" value="Pagar boleto">
+            </div>
+            <br>
+          </form>
+        </div>
+      </div>
 </div>
+
 <br>
 {% if estacionamiento == None %}
     <div class="containerlistas">
@@ -57,11 +80,13 @@
         <h2 style="text-align: center;">Registros del estacionamiento:</h2>
         <table>
             <tr>
+                <th>Id Boleto</th>
                 <th>Usuario</th>
                 <th>Total pagado</th>
                 <th>Estatus</th>
             </tr>
             <tr>
+                <th>Sin asignar</th>
                 <td>Sin asignar</td>
                 <td>$ 0</td>
                 <td style="background-color: #008080; color: #fff;">No aplica</td>
@@ -85,16 +110,20 @@
         <h2 style="text-align: center;">Registros del estacionamiento: {{estacionamiento}}</h2>
         <table>
             <tr>
+                <th>Id Boleto</th>
                 <th>Usuario</th>
                 <th>Total pagado</th>
                 <th>Estatus</th>
             </tr>
             {% for boleto in boletos %}
                 <tr>
+                    <td>{{ boleto.idBoleto }}</td>
                     <td>{{ boleto.usuario }}</td>
                     <td>$ {{ boleto.tarifa }}</td>
                     {% if boleto.estatus == 'Pendiente' %}
                         <td style="background-color: #dc3545; color: aliceblue;">{{ boleto.estatus }}</td>
+                    {% elif boleto.estatus == "Pagado por Admin" %}
+                        <td style="background-color: #564caf; color: aliceblue;">{{ boleto.estatus }}</td>
                     {% else %}
                         <td style="background-color: #4CAF50; color: aliceblue;">{{ boleto.estatus }}</td>
                     {% endif %} 
@@ -104,5 +133,24 @@
     </div>
 {% endif %}
 <br>
+<div class="container">
+    <form action="{{ url_for('registrados')}}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <h2>Visualizar registros de estacionamientos por fechas</h2>
+      <div class="form-group">
+          <div style="text-align: center;"><label>Ingresa la fecha de inicio:</label></div>
+          <input type="date" name="fecha_inicio" class="cian" required>
+        </div>
+      <div class="form-group">
+        <div style="text-align: center;"><label>Ingresa la fecha de final:</label></div>
+        <input type="date" name="fecha_fin" class="cian" required>
+      </div>
+      <div style="text-align: center;" class="form-group-cian">
+        <input type="submit" value="Visualizar">
+      </div>
+      <br>
+    </form>
+  </div>
+  <br>
 
 {% endblock %}
