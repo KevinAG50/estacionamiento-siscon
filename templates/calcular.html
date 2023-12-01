@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informacion Boleto</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/login.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: rgb(129, 131, 134);
+            padding: 20px;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            align-items: center;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+<br><br><br><br><br><br>
+
+<div class="alerta-truco">
+    <h2><i class="fas fa-info-circle"></i> Detalles del Boleto</h2>
+    <p><strong>Código de Boleto:</strong> {{ ticket.idBoleto }}</p>
+    <p><strong>Estacionamiento:</strong> {{ ticket.estacionamiento }}</p>
+    <p><strong>Hora de Entrada:</strong> {{ ticket.hora_entrada }}</p>
+    <p><strong>Hora de Salida:</strong> {{ hora_salida }}</p>
+    <p><strong>Total a Pagar:</strong> ${{ total_a_pagar }}</p>
+
+
+    <div style="display: flex; justify-content: space-between;">
+        <form action="{{ url_for('registrar_salida')}}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="idBoleto" value="{{ ticket.idBoleto }}">
+            <input type="hidden" name="hora_salida" value="{{ hora_salida }}">
+            <div style="text-align: center;">
+                <input type="submit" class="btn-truco btn-success-truco" value="Confirmar">
+            </div>
+        </form>
+        
+        <button class="btn-truco btn-danger-truco" onclick="cancelarPago()">Cancelar</button>
+    </div>
+</div>
+
+<script>
+    function cancelarPago() {
+        window.location.href = "{{ url_for('index') }}";
+    }
+</script>
+
+</body>
+</html>
