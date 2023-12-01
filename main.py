@@ -425,6 +425,160 @@ def gen_pdf(idBoleto):
         doc.build(content)
         return pdf_filename
 
+@app.route('/boleto/<int:idBoleto>')
+def boleto(idBoleto):
+    pdf = gen_pdf(idBoleto)
+    return send_file(pdf, as_attachment=True)
+
+    
+@app.route('/codigo/<int:idBoleto>')
+def codigo(idBoleto):
+    nombre = session['username']
+    variable = ""
+    boleto = None
+    total_a_pagar = 0
+    hora_salida = None
+    boleto = Boletos.query.filter_by(idBoleto = idBoleto).first()
+    if boleto is not None:
+        if boleto.estatus == 'Pendiente':
+            if boleto.usuario == nombre:
+
+                hora_entrada = datetime.strptime(str(boleto.hora_entrada), '%Y-%m-%d %H:%M:%S')
+                hora_salida = datetime.now()
+                tiempo = hora_salida - hora_entrada
+                #Tiempo convertido a minutos
+                tiempo_mins = tiempo.total_seconds() / 60
+                total_a_pagar = calcular_precio(tiempo_mins)
+    
+                return render_template('calcular.html', ticket = boleto, variable=variable, total_a_pagar=total_a_pagar, hora_salida=hora_salida)
+
+            else:
+                variable = "Caridad"
+                flash(('Te agradecemos que seas caritativo, pero no puedes pagar boletos de otras personas!','primary'))
+                return render_template('alertas.html', variable=variable)   
+        else:
+            variable = "Pagado"
+            total_a_pagar = 0
+            success_message = 'El pago de este boleto ya se ha realizado!'
+            flash((success_message,'warning'))
+            return render_template('alertas.html', variable=variable)
+    else: 
+        variable = "NoEncontrado"
+        flash(('El boleto no se encuentra registrado!', 'danger')) 
+        return render_template('alertas.html', variable=variable)
+
+def calcular_precio(tiempo_mins):
+    print("tiempo: ",tiempo_mins)
+    nombre = session['username']
+    datos_user = User.query.filter_by(username=nombre).first()
+    tarifa = Tarifas.query.filter_by(estacionamiento=datos_user.estacionamiento).first()
+
+    tiempo_horas = tiempo_mins / 60
+    print("tiempo minutos",tiempo_mins)
+    if tiempo_mins <= tarifa.tiempo_tol:
+        total = 0.0
+    elif tiempo_mins <= 120:
+        total = tarifa.dos_horas
+    else:
+        horas_adicionales = (tiempo_mins - 120) / 60 
+        total = tarifa.dos_horas + (horas_adicionales * tarifa.hora_extra)
+
+    dias_completos = tiempo_horas // 24
+
+    if dias_completos >= 1:
+       total = min(total, dias_completos * tarifa.pension_dia)
+
+    semanas_completas = tiempo_horas // (24 * 7)
+
+    if semanas_completas >= 1:
+        total = min(total, semanas_completas * tarifa.pension_semana)
+
+    meses_completos = tiempo_horas // (24 * 30)
+
+    if meses_completos >= 1:
+        total = min(total, meses_completos * tarifa.pension_mes)
+    return total
+
+@app.route('/calcular_salida', methods = ['GET', 'POST'])
+def calcular_salida():
+    nombre = session['username']
+    variable = ""
+    boleto = None
+    total_a_pagar = 0
+    hora_salida = None
+    if request.method == 'POST':
+        boleto = Boletos.query.filter_by(idBoleto = request.form['idBoleto']).first()
+        print(nombre)
+        if boleto is not None:
+            if boleto.estatus == 'Pendiente':
+                if boleto.usuario == nombre:
+
+                    hora_entrada = datetime.strptime(str(boleto.hora_entrada), '%Y-%m-%d %H:%M:%S')
+                    #hora_salida = datetime.strptime(str(request.form['hora_salida']), '%Y-%m-%dT%H:%M')
+                    hora_salida = datetime.now()
+
+
+                    tiempo = hora_salida - hora_entrada
+                    #Tiempo convertido a minutos
+                    tiempo_mins = tiempo.total_seconds() / 60
+
+                    total_a_pagar = calcular_precio(tiempo_mins)
+    
+                    return render_template('calcular.html', ticket = boleto, variable=variable, total_a_pagar=total_a_pagar, hora_salida=hora_salida)
+
+                else:
+                    variable = "Caridad"
+                    flash(('Te agradecemos que seas caritativo, pero no puedes pagar boletos de otras personas!','primary'))
+                    return render_template('alertas.html', variable=variable)   
+            else:
+                variable = "Pagado"
+                total_a_pagar = 0
+                success_message = 'El pago de este boleto ya se ha realizado!'
+                flash((success_message,'warning'))
+                return render_template('alertas.html', variable=variable)
+        else: 
+            variable = "NoEncontrado"
+            flash(('El boleto no se encuentra registrado!', 'danger')) 
+            return render_template('alertas.html', variable=variable)
+    else:
+        return redirect(url_for('index'))
+
+@app.route('/registrar_salida', methods = ['GET', 'POST'])
+def registrar_salida():
+    nombre = session['username']
+    variable = ""
+    datos_user = User.query.filter_by(username = nombre).first()
+    datos_est = Estacionamientos.query.filter_by(nombreE = datos_user.estacionamiento).first()
+    if request.method == 'POST':
+        boleto = Boletos.query.filter_by(idBoleto = request.form['idBoleto']).first()
+        
+        Boletos.query.filter_by(idBoleto = boleto.idBoleto).update({'hora_salida': request.form['hora_salida']})
+        db.session.commit()
+        hora_entrada = datetime.strptime(str(boleto.hora_entrada), '%Y-%m-%d %H:%M:%S')
+        hora_salida = datetime.strptime(str(boleto.hora_salida), '%Y-%m-%d %H:%M:%S')
+
+        tiempo = hora_salida - hora_entrada
+        #Tiempo convertido a minutos
+        tiempo_mins = tiempo.total_seconds() / 60
+
+        total_a_pagar = calcular_precio(tiempo_mins)
+
+        lugares = datos_est.lugares - 1
+        estacionamiento_data = {
+            'lugares': lugares
+        }
+        Estacionamientos.query.filter_by(nombreE=datos_user.estacionamiento).update(estacionamiento_data)
+
+        Boletos.query.filter_by(idBoleto = request.form['idBoleto']).update(dict(tarifa = total_a_pagar, estatus = 'Pagado'))
+        db.session.commit()
+        pago = Pagos(usuario = nombre, total_pago = total_a_pagar, estacionamiento = datos_user.estacionamiento)
+        db.session.add(pago)
+        db.session.commit()
+        variable = "Realizado"
+        flash(('Boleto pagado correctamente!','success'))
+        return render_template('alertas.html', ticket = boleto, variable=variable)
+    else:
+        return redirect(url_for('index'))
 
 @app.route('/registrar_por_admin', methods = ['GET', 'POST'])
 def registrar_por_admin():

@@ -197,6 +197,22 @@ select:focus {
   box-shadow: 0 0 5px #dc3545;
 }
 
+.select-modificar {
+  width: 100%;
+  padding: 8px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #333;
+}
+
+.select-modificar:focus {
+  outline: none;
+  border-color: #35dcaa;
+  box-shadow: 0 0 5px #35b5dc;
+}
+
 option {
   padding: 5px;
 }
@@ -263,7 +279,7 @@ option {
 .form-group-amarillo input[type="submit"] {
   width: 80%;
   padding: 10px;
-  background-color: #e9ec22;
+  background-color: #fbff00;
   color: #333;
   border: none;
   border-radius: 3px;
@@ -271,7 +287,35 @@ option {
 }
 
 .form-group-amarillo input[type="submit"]:hover {
-  background-color: #bebc22;
+  background-color: rgb(238, 203, 7);
+}
+
+.form-group-cian input[type="submit"] {
+  width: 80%;
+  padding: 10px;
+  background-color: #35dcaa;
+  color: #000000;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.form-group-cian input[type="submit"]:hover {
+  background-color: #35dcdc;
+}
+
+.form-group-azul input[type="submit"] {
+  width: 80%;
+  padding: 10px;
+  background-color: #564caf;
+  color: #ffffff;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.form-group-azul input[type="submit"]:hover {
+  background-color: #342a8a;
 }
 
 .form-control {
@@ -312,6 +356,46 @@ option {
   outline: none;
   border-color: #e9ec22 !important;
   box-shadow: 0 0 0 0.2rem rgba(233, 236, 34, 0.25) !important;
+}
+
+.azul {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.azul:focus {
+  outline: none;
+  border-color: #564caf !important;
+  box-shadow: 0 0 0 0.2rem rgba(37, 34, 236, 0.25) !important;
+}
+
+.cian {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.cian:focus {
+  outline: none;
+  border-color: #35dcaa !important;
+  box-shadow: 0 0 0 0.2rem rgba(34, 236, 219, 0.25) !important;
 }
 
 /*-----------------------------------------*/
@@ -380,4 +464,3 @@ tr:nth-child(even) {
 tr:hover {
   background-color: #e6e6e6;
 }
-
