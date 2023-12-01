@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SISCON</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+
+</head>
+<body>
+
+    {% if variable == "Success" %}
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Hora registrada',
+                html: 'El código de su ticket es: <strong>{{ ticket.idBoleto }}</strong><br>El estacionamiento es: <strong>{{ ticket.estacionamiento }}</strong><br>La hora de entrada es: <strong>{{ ticket.hora_entrada }}</strong><br>El código QR de su ticket es:<br><img src="data:image/png;base64,{{ ticket.qr_code.decode() }}" style="width: 200px;">',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Aceptar'
+            }).then((result) => {
+                // Redirige a la página PDF después de aceptar la alerta
+                window.location.href = "{{ url_for('boleto', idBoleto=ticket.idBoleto) }}";
+
+                // Después de un breve retraso, redirige a la página de índice
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('index') }}";
+                }, 1000);  // 1000 milisegundos = 1 segundo
+            });
+        </script>
+    {% elif variable == "Lleno" %}
+        <script>
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sin Espacio',
+                html: 'Su ticket NO pudo ser generado éxitosamente,<br>debido, a que el estacionamiento se encuentra lleno.<br>Tendrá que esperar.',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Aceptar'
+            }).then((result) => {
+                // Redirige a la página principal después de aceptar la alerta
+                window.location.href = "{{ url_for('index') }}";
+            });
+        </script>
+    {% elif variable == "Realizado" %}
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Salida',
+                html: 'El código de su ticket es: <strong>{{ ticket.idBoleto }}</strong><br>La hora de entrada es: <strong>{{ ticket.hora_entrada }}</strong><br>La hora de salida es: <strong>{{ ticket.hora_salida }}</strong><br>El total pagado fue: <strong>${{ ticket.tarifa }}</strong>',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Confirmar'
+            }).then((result) => {
+                window.location.href = "{{ url_for('index') }}";
+            });
+        </script>
+    {% elif variable == "Admin" %}
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Salida',
+                html: 'El boleto ha sido pagado correctamente!',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Confirmar'
+            }).then((result) => {
+                window.location.href = "{{ url_for('registros') }}";
+            });
+        </script>
+    {% elif variable == "PagadoAdmin" %}
+        <script>
+            Swal.fire({
+                icon: 'warning',
+                title: 'Aviso',
+                html: 'El pago de este boleto ya se ha realizado!',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Confirmar'
+            }).then((result) => {
+                window.location.href = "{{ url_for('registros') }}";
+
+            });
+        </script>
+    {% elif variable == "NoEncontradoAdmin" %}
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                html: 'El boleto no se encuentra registrado!',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Confirmar'
+            }).then((result) => {
+                window.location.href = "{{ url_for('registros') }}";
+            });
+        </script>
+    {% elif variable == "Caridad" %}
+        <script>
+            Swal.fire({
+                icon: 'warning',
+                title: 'Aviso',
+                html: 'Te agradecemos que seas caritativo, pero no puedes pagar boletos de otras personas!',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Confirmar'
+            }).then((result) => {
+                window.location.href = "{{ url_for('index') }}";
+            });
+        </script>
+    {% elif variable == "Pagado" %}
+        <script>
+            Swal.fire({
+                icon: 'warning',
+                title: 'Aviso',
+                html: 'El pago de este boleto ya se ha realizado!',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Confirmar'
+            }).then((result) => {
+                window.location.href = "{{ url_for('index') }}";
+
+            });
+        </script>
+    {% elif variable == "NoEncontrado" %}
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                html: 'El boleto no se encuentra registrado!',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Confirmar'
+            }).then((result) => {
+                window.location.href = "{{ url_for('index') }}";
+            });
+        </script>
+    {% endif %}
+
+</body>
+</html>
