@@ -1,4 +1,3 @@
-from marshmallow import validates
 from wtforms import Form, StringField, TextAreaField, PasswordField, HiddenField, validators
 from wtforms.fields import EmailField, IntegerField, DateTimeField
 from models import User, Estacionamientos
@@ -38,15 +37,16 @@ class usersForm(Form):
     estacionamiento = StringField('estacionamiento',
         [validators.length(min = 7, max = 25), validators.DataRequired()
     ])
+    privilegio = StringField('privilegio',
+        [validators.length(min = 7, max = 50), validators.DataRequired()
+    ])
 
-    @validates('username')
     def validate_username(self, field):
         username = field.data
         user = User.query.filter_by(username = username).first()
         if user is not None:
             raise validators.ValidationError('El usuario ya se encuentra registrado!')
         
-    @validates('email')
     def validate_email(self, field):
         email = field.data
         email = User.query.filter_by(email = email).first()
@@ -84,6 +84,18 @@ class tarifasForm(Form):
     ])
     hora_extra = IntegerField(
         'hora_extra', 
+        [validators.NumberRange(min=1, max=9999), validators.data_required()
+    ])
+    pension_dia = IntegerField(
+        'pension_dia', 
+        [validators.NumberRange(min=1, max=9999), validators.data_required()
+    ])
+    pension_semana = IntegerField(
+        'pension_semana', 
+        [validators.NumberRange(min=1, max=9999), validators.data_required()
+    ])
+    pension_mes = IntegerField(
+        'pension_mes', 
         [validators.NumberRange(min=1, max=9999), validators.data_required()
     ])
     estacionamiento = StringField('estacionamiento',
