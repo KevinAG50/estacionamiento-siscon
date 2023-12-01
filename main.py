@@ -1,7 +1,7 @@
 #.venv\Scripts\activate
 
 from flask import Flask, get_flashed_messages, render_template, request, make_response, session
-from flask import redirect, url_for, flash, g, json, copy_current_request_context
+from flask import redirect, url_for, flash, g, json, copy_current_request_context, send_file
 from flask_mail import Mail, Message
 import threading
 from functools import wraps
@@ -11,7 +11,16 @@ from helper import date_format
 from flask_wtf.csrf import CSRFProtect
 import forms 
 from datetime import datetime
+from io import BytesIO
+import qrcode
+from base64 import b64encode
+from sqlalchemy import text
 from flask_sqlalchemy import SQLAlchemy
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Image, Paragraph, Spacer
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+import base64
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
@@ -32,32 +41,39 @@ def page_not_found(e):
 
 @app.before_request
 def before_request():
-    endpoints_prohibidos_sin = ['admin', 'eliminar', 'boletos', 'estacionamientos', 'tarifas', 'usuarios', 'eliminar_usuarios', 'registros', 'registrar_entrada', 'registrar_salida']
-    endpoints_prohibidos_con = ['admin', 'eliminar', 'boletos', 'estacionamientos', 'tarifas', 'usuarios', 'eliminar_usuarios', 'registros']
-
+    endpoints_prohibidos_sin = ['admin', 'index', 'codigo', 'eliminar', 'boletos', 'estacionamientos', 'tarifas', 'usuarios', 'eliminar_usuarios', 'registros', 'registrar_entrada', 'registrar_salida','registrar_por_admin']
+    endpoints_prohibidos_con = ['admin', 'eliminar', 'boletos', 'estacionamientos', 'tarifas', 'usuarios', 'eliminar_usuarios', 'registros','registrar_por_admin']
+    
     admin = User.query.filter_by(username = 'admin').first()
+
     if admin is None:
-        estacionamiento = Estacionamientos(nombreE = 'Estacionamiento A', capacidad = 50, codigo_postal = 159357)
+        estacionamiento = Estacionamientos(nombreE = 'Estacionamiento A', capacidad = 3, codigo_postal = 159357, lugares = 0)
         db.session.add(estacionamiento)
         db.session.commit()
-        tarifa = Tarifas(tiempo_tol = 15, dos_horas = 20, hora_extra = 20, estacionamiento = 'Estacionamiento A')
+        tarifa = Tarifas(tiempo_tol = 15, dos_horas = 20, hora_extra = 20, pension_dia = 200, pension_semana = 1000, pension_mes = 4000, estacionamiento = 'Estacionamiento A')
         db.session.add(tarifa)
         db.session.commit()
-        admin = User(username = 'admin', email = '20203tn005@utez.edu.mx', password = 'admin123*', estacionamiento = 'Estacionamiento A')
+        admin = User(username = 'admin', email = '20203tn005@utez.edu.mx', password = 'admin123*', estacionamiento = 'Estacionamiento A', privilegio = "admin")
         db.session.add(admin)
         db.session.commit()
+
     if 'username' not in session and request.endpoint in endpoints_prohibidos_sin:
         flash(('Debes iniciar sesión!','warning'))
         return redirect(url_for('login'))
-    elif 'username' in session and session['username'] != 'admin' and request.endpoint in endpoints_prohibidos_con:
-        flash(('Acceso restringido para usuarios que no son administradores!','danger'))
-        return redirect(url_for('index'))
-    elif 'username' in session and session['username'] == 'admin' and request.endpoint in ['login','create']:
-        flash(('Hay una sesión activa!','info'))
-        return redirect(url_for('admin'))
-    elif 'username' in session and request.endpoint in ['login','create']:
-        flash(('Hay una sesión activa!','info'))
-        return redirect(url_for('index'))
+    elif 'username' in session:
+        usuario = User.query.filter_by(username=session['username']).first()
+
+        if usuario:
+            if usuario.privilegio != "admin" and request.endpoint in endpoints_prohibidos_con:
+                flash(('Acceso restringido para usuarios que no son administradores!','danger'))
+                return redirect(url_for('index'))
+            elif usuario.privilegio == "admin" and request.endpoint in ['login','create']:
+                flash(('Hay una sesión activa!','info'))
+                return redirect(url_for('admin'))
+            elif request.endpoint in ['login','create']:
+                flash(('Hay una sesión activa!','info'))
+                return redirect(url_for('index'))
+
 
 @app.after_request
 def after_request(response):
@@ -93,7 +109,7 @@ def login():
     
         user = User.query.filter_by(username = username).first()
         if user is not None and user.verify_password(password):
-            if username == "admin":
+            if user.privilegio == "admin":
                 success_message = 'Bienvenido {}!'.format(username)
                 flash((success_message,'success'))
                 session['username'] = username
@@ -121,7 +137,8 @@ def create():
         user = User(create_form.username.data, 
                     create_form.email.data,
                     create_form.password.data,
-                    create_form.estacionamiento.data)
+                    create_form.estacionamiento.data,
+                    create_form.privilegio.data)
         db.session.add(user)
         db.session.commit()
 
@@ -158,13 +175,17 @@ def estacionamientos():
     if request.method == 'POST' and estacionamiento_form.validate():
         estacionamiento = Estacionamientos(estacionamiento_form.nombreE.data, 
                         estacionamiento_form.capacidad.data,
-                        estacionamiento_form.codigo_postal.data)
+                        estacionamiento_form.codigo_postal.data,
+                        lugares=0)
         db.session.add(estacionamiento)
         db.session.commit()
 
         tarifa = Tarifas(tiempo_tol=15,
                         dos_horas=20,
                         hora_extra=20,
+                        pension_dia=200,
+                        pension_semana=1000,
+                        pension_mes=4000,
                         estacionamiento=estacionamiento_form.nombreE.data)
         db.session.add(tarifa)
         db.session.commit()
@@ -193,7 +214,10 @@ def tarifas():
         estacionamiento_data = {
             'tiempo_tol': tarifas_form.tiempo_tol.data,
             'dos_horas': tarifas_form.dos_horas.data,
-            'hora_extra': tarifas_form.hora_extra.data
+            'hora_extra': tarifas_form.hora_extra.data,
+            'pension_dia': tarifas_form.pension_dia.data,
+            'pension_semana': tarifas_form.pension_semana.data,
+            'pension_mes': tarifas_form.pension_mes.data
         }
 
         Tarifas.query.filter_by(estacionamiento=tarifas_form.estacionamiento.data).update(estacionamiento_data)
@@ -215,7 +239,8 @@ def usuarios():
         user = User(create_form.username.data, 
                     create_form.email.data,
                     create_form.password.data,
-                    create_form.estacionamiento.data)
+                    create_form.estacionamiento.data,
+                    create_form.privilegio.data)
         db.session.add(user)
         db.session.commit()
 
@@ -258,86 +283,31 @@ def eliminar_usuario():
             flash(('No se encontró el usuario a eliminar!', 'danger'))
     return redirect(url_for('usuarios'))
 
-@app.route('/inicio', methods = ['GET', 'POST'])
-def index():
-    title = "SISCON"
-    username = session['username']
-    boletos = Boletos.query.filter_by(usuario = username).all()
-    ticket = Boletos.query.filter_by(usuario = username).first()
-    return render_template('index.html', title = title, username = username, boletos = boletos, ticket = ticket)
-
-@app.route('/registrar_entrada', methods = ['GET', 'POST'])
-def registrar_entrada():
-    nombre = session['username']
-    usuario = User.query.filter_by(username = nombre).first()
+@app.route('/modificar_usuario', methods =  ['GET', 'POST'])
+def modificar_usuario():
     if request.method == 'POST':
-        ticket = Boletos(usuario = nombre, hora_entrada = request.form['hora_entrada'], hora_salida = None, tarifa = 0, estatus = 'Pendiente', estacionamiento = usuario.estacionamiento)
-        db.session.add(ticket)
-        db.session.commit()
-        success_message = 'Hora de entrada registrada éxitosamente! El código de su boleto es {}!'.format(ticket.idBoleto)
-        flash((success_message,'success'))
-        return render_template('alerta_entrada.html', ticket = ticket)
-    else:
-        return redirect(url_for('index'))
-
-def calcular_precio(tiempo_mins):
-    print("tiempo: ",tiempo_mins)
-    nombre = session['username']
-    datos_user = User.query.filter_by(username=nombre).first()
-    tarifa = Tarifas.query.filter_by(estacionamiento=datos_user.estacionamiento).first()
-
-    print("tiempo minutos",tiempo_mins)
-    if tiempo_mins <= tarifa.tiempo_tol:
-        total = 0.0
-    elif tiempo_mins <= 120:
-        total = tarifa.dos_horas
-    else:
-        horas_adicionales = (tiempo_mins - 120) / 60 
-        total = tarifa.dos_horas + (horas_adicionales * tarifa.hora_extra)
-    return total
-
-@app.route('/registrar_salida', methods = ['GET', 'POST'])
-def registrar_salida():
-    nombre = session['username']
-    variable = ""
-    datos_user = User.query.filter_by(username = nombre).first()
-    if request.method == 'POST':
-        boleto = Boletos.query.filter_by(idBoleto = request.form['idBoleto']).first()
-        print(nombre)
-        if boleto is not None:
-            if boleto.estatus == 'Pendiente':
-                if boleto.usuario == nombre:
-
-                    Boletos.query.filter_by(idBoleto = boleto.idBoleto).update({'hora_salida': request.form['hora_salida']})
-                    db.session.commit()
-                    hora_entrada = datetime.strptime(str(boleto.hora_entrada), '%Y-%m-%d %H:%M:%S')
-                    hora_salida = datetime.strptime(str(boleto.hora_salida), '%Y-%m-%d %H:%M:%S')
-
-                    tiempo = hora_salida - hora_entrada
-                    #Tiempo convertido a minutos
-                    tiempo_mins = tiempo.total_seconds() / 60
-
-                    total_a_pagar = calcular_precio(tiempo_mins)
-
-                    Boletos.query.filter_by(idBoleto = request.form['idBoleto']).update(dict(tarifa = total_a_pagar, estatus = 'Pagado'))
-                    db.session.commit()
-                    pago = Pagos(usuario = nombre, total_pago = total_a_pagar, estacionamiento = datos_user.estacionamiento)
-                    db.session.add(pago)
-                    db.session.commit()
-                    variable = "Realizado"
-                    flash(('Boleto pagado correctamente!','success'))
-                else:
-                    variable = "Caridad"
-                    flash(('Te agradecemos que seas caritativo, pero no puedes pagar boletos de otras personas!','primary'))
+        idUsuario = request.form['idUsuario']
+        nombre = request.form['username']
+        usuario = User.query.get(idUsuario)
+        if usuario:
+            if usuario.idUsuario == 1:
+                flash(('No puedes modificar al creador de todo!', 'danger'))
             else:
-                variable = "Pagado"
-                total_a_pagar = 0
-                success_message = 'El pago de este boleto ya se ha realizado!'
-                flash((success_message,'warning'))
-        else: 
-            variable = "NoEncontrado"
-            flash(('El boleto no se encuentra registrado!', 'danger')) 
-    return render_template('alerta_salida.html', ticket = boleto, variable=variable)
+                user = User.query.filter_by(username = nombre).first()
+                if user is not None:
+                    error_message = 'El nombre de usuario ya se encuentra registrado! Utiliza otro!'
+                    flash((error_message,'danger')) 
+                else:
+                    usuario_data = {
+                    'username': nombre,
+                    }
+
+                    User.query.filter_by(idUsuario=idUsuario).update(usuario_data)
+                    db.session.commit()
+                    flash(('Usuario modificado correctamente!', 'success'))      
+        else:
+            flash(('No se encontró el usuario a modificar!', 'danger'))        
+    return redirect(url_for('usuarios'))
 
 @app.route('/registros', methods = ['GET', 'POST'])
 def registros():
@@ -353,6 +323,27 @@ def registros():
         suma_total_pagos = sum(pago.total_pago for pago in pagos_estacionamiento)
 
     return render_template('registros.html', form = registros_form, boletos = boletos, suma_total_pagos = suma_total_pagos, username = username, estacionamiento = estacionamiento_nombre, estacionamientos = estacionamientos, title = title)
+
+
+
+@app.route('/registrados', methods = ['GET', 'POST'])
+def registrados():
+    suma_total_pagos = 0
+    username = session['username']
+    title = "Registrados"
+    registros=''
+    fecha_inicio = ''
+    fecha_fin = ''
+    if request.method == 'POST':
+
+        fecha_inicio = request.form['fecha_inicio']
+        fecha_fin = request.form['fecha_fin']
+
+        query = text(f"SELECT sumar_boletos('{fecha_inicio}', '{fecha_fin}')")
+        suma_total_pagos = db.session.execute(query).scalar()
+            
+        registros = obtener_registros(fecha_inicio, fecha_fin) 
+    return render_template('registrados.html', username = username,  title = title, registros = registros, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin, suma_total_pagos=suma_total_pagos)
 
 @app.route('/ajax-login', methods=['POST'])
 def ajax_login():
