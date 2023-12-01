@@ -52,12 +52,18 @@
                         </script>
                     {% endfor %}
                 </div>
-                <div style="text-align: center;"><label>Nombre del Estacionamiento:</label></div>
+                <div style="text-align: center;"><label>Nombre del estacionamiento:</label></div>
                 <select name="estacionamiento" required>
                   <option value="" disabled selected>Selecciona un estacionamiento</option>
                   {% for estacionamiento in estacionamientos %}
                       <option value="{{ estacionamiento.nombreE }}">{{ estacionamiento.nombreE }}</option>
                   {% endfor %}
+                </select>
+                <div style="text-align: center;"><label>Privilegios de Usuario:</label></div>
+                <select name="privilegio" required>
+                    <option value="" disabled selected>Selecciona el privilegio</option>
+                    <option value="admin">Administrador</option>
+                    <option value="cliente">Cliente</option>
                 </select>
                 {{form.honeypot}}
                 <br>
@@ -111,5 +117,28 @@
         {% endfor %}  
     </table>
 </div>
-<br>
+<br><br>
+<div class="container">
+    <form method="post" action="{{ url_for('modificar_usuario') }}">
+        <input type="hidden" name="csrf_token"  value="{{ csrf_token() }}" />
+        <h2>Modificar usuario</h2>
+        <div style="text-align: center;"><label>Nombre del Usuario:</label></div>
+        <select name="idUsuario" class="select-modificar" required>
+            <option value="" disabled selected>Selecciona al usuario</option>
+            {% for usuario in usuarios %}
+                <option value="{{ usuario.idUsuario }}">{{ usuario.username }}</option>
+            {% endfor %}
+        </select>
+        <div style="text-align: center;" class="form-group-users">
+            <label>Nombre nuevo de usuario:</label>
+            {{ form.username }}
+            <p class="help-block text-danger"></p> 
+        </div>
+        <div class="form-group-cian" style="text-align: center;">
+            <input type="submit" value="Modificar usuario">
+        </div>
+        <br>
+      </form>
+</div>
+<br><br>
 {% endblock %}

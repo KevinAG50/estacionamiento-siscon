@@ -309,6 +309,160 @@ def modificar_usuario():
             flash(('No se encontró el usuario a modificar!', 'danger'))        
     return redirect(url_for('usuarios'))
 
+@app.route('/index', methods = ['GET', 'POST'])
+def index():
+    title = "SISCON"
+    username = session['username']
+    boletos = Boletos.query.filter_by(usuario = username).all()
+    ticket = Boletos.query.filter_by(usuario = username).first()
+    return render_template('index.html', title = title, username = username, boletos = boletos, ticket = ticket)
+
+@app.route('/registrar_entrada', methods = ['GET', 'POST'])
+def registrar_entrada():
+    nombre = session['username']
+    usuario = User.query.filter_by(username = nombre).first()
+    #hora_entrada = request.form['hora_entrada']
+    hora_entrada = datetime.now()
+    estacionamiento = Estacionamientos.query.filter_by(nombreE = usuario.estacionamiento).first()
+    if request.method == 'POST':
+        if estacionamiento.lugares < estacionamiento.capacidad:
+
+            lugares = estacionamiento.lugares + 1
+            estacionamiento_data = {
+                'lugares': lugares
+            }
+            Estacionamientos.query.filter_by(nombreE=usuario.estacionamiento).update(estacionamiento_data)
+            db.session.commit()
+
+            ticket = Boletos(usuario = nombre, hora_entrada = hora_entrada, hora_salida = None, tarifa = 0, estatus = 'Pendiente', estacionamiento = usuario.estacionamiento)
+            db.session.add(ticket)
+            db.session.commit()
+
+            qr_data = f"localhost:8000/codigo/{ticket.idBoleto}"
+            qr = qrcode.make(qr_data)
+            qr_io = BytesIO()
+            qr.save(qr_io, format='PNG')
+            qr_io.seek(0)
+
+            ticket.qr_code = b64encode(qr_io.read())
+            db.session.add(ticket)
+            db.session.commit()
+
+            variable = "Success"
+            success_message = 'Hora de entrada registrada éxitosamente! El código de su boleto es {}!'.format(ticket.idBoleto)
+            flash((success_message,'success'))
+            return render_template('alertas.html', ticket=ticket, variable=variable)
+
+        else:
+            variable = "Lleno"
+            flash(('El estacionamiento está lleno, tendrás que esperar!','warning'))
+            return render_template('alertas.html', variable=variable)
+    else:
+        return redirect(url_for('index'))
+
+def gen_pdf(idBoleto):
+        pdf_filename = f"Boleto_{idBoleto}.pdf"
+        doc = SimpleDocTemplate(pdf_filename, pagesize=(460,445), title=f"Boleto {idBoleto}")
+        boleto = Boletos.query.filter_by(idBoleto=idBoleto).first()
+        qr_image = Image(BytesIO(base64.b64decode(boleto.qr_code)))
+        qr_image.drawHeight = 1.5 * inch * qr_image.drawHeight / qr_image.drawWidth
+        qr_image.drawWidth = 1.5 * inch
+
+        # Datos para la tabla
+        data_table = [
+            ["Estatus", str(boleto.estatus)],
+            ["El código de su ticket es:", str(boleto.idBoleto)],
+            ["El estacionamiento es:", str(boleto.estacionamiento)],
+            ["La hora de entrada es:", str(boleto.hora_entrada)],
+        ]
+
+        # Definir la tabla
+        table = Table(data_table, colWidths=[2.5 * inch, 3 * inch])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.black),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+            ('SHADOW', (0, 0), (-1, -1), 5, 5, colors.gray)
+        ]))
+
+        data_qr = [[qr_image]]
+        table_qr = Table(data_qr, colWidths=[1 * inch, 1 * inch])
+        table_qr.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ]))
+
+        texto1 = f"Información del boleto {idBoleto}."
+        texto3 = f"© Estacionamientos SISCON"
+        # Estilos para el párrafo
+        styles = getSampleStyleSheet()
+        paragraph_style = ParagraphStyle(
+            "CustomParagraph",
+            parent=styles["Normal"],
+            fontSize=10,
+            alignment=1,
+        )
+        paragraph_style3 = ParagraphStyle(
+            "CustomParagraph",
+            parent=styles["Normal"],
+            fontSize=20,
+            alignment=1,
+        )
+        paragraph_style2 = ParagraphStyle(
+            "CustomParagraph",
+            parent=styles["Normal"],
+            fontSize=15,
+            alignment=1,
+        )
+
+        texto2 = f"Para Pagar o Consultar el estatus del ticket escanee el Código QR:"
+        spacer = Spacer(1, 0.2 * inch)
+        content = [Paragraph(texto3, paragraph_style3), spacer, spacer, Paragraph(texto1, paragraph_style2), spacer, table, spacer, Paragraph(texto2, paragraph_style), table_qr]
+        doc.build(content)
+        return pdf_filename
+
+
+@app.route('/registrar_por_admin', methods = ['GET', 'POST'])
+def registrar_por_admin():
+    variable = ""
+    if request.method == 'POST':
+        boleto = Boletos.query.filter_by(idBoleto = request.form['idBoleto']).first()
+        hora_salida = datetime.now()
+        if boleto is not None:
+            datos_est = Estacionamientos.query.filter_by(nombreE = boleto.estacionamiento).first()
+            if boleto.estatus == 'Pendiente':
+                Boletos.query.filter_by(idBoleto = boleto.idBoleto).update({'hora_salida': hora_salida})
+                db.session.commit()
+
+                total_a_pagar = 0
+
+                lugares = datos_est.lugares - 1
+                estacionamiento_data = {
+                    'lugares': lugares
+                }
+                Estacionamientos.query.filter_by(nombreE = datos_est.nombreE).update(estacionamiento_data)
+
+                Boletos.query.filter_by(idBoleto = request.form['idBoleto']).update(dict(tarifa = total_a_pagar, estatus = 'Pagado por Admin'))
+                db.session.commit()
+                pago = Pagos(usuario = boleto.usuario, total_pago = total_a_pagar, estacionamiento = boleto.estacionamiento)
+                db.session.add(pago)
+                db.session.commit()
+                variable = "Admin"
+                flash(('Boleto pagado correctamente!','success'))
+            else:
+                variable = "PagadoAdmin"
+                total_a_pagar = 0
+                success_message = 'El pago de este boleto ya se ha realizado!'
+                flash((success_message,'warning'))
+        else: 
+            variable = "NoEncontradoAdmin"
+            flash(('El boleto no se encuentra registrado!', 'danger')) 
+    return render_template('alertas.html', variable=variable)
+
 @app.route('/registros', methods = ['GET', 'POST'])
 def registros():
     username = session['username']
@@ -324,7 +478,10 @@ def registros():
 
     return render_template('registros.html', form = registros_form, boletos = boletos, suma_total_pagos = suma_total_pagos, username = username, estacionamiento = estacionamiento_nombre, estacionamientos = estacionamientos, title = title)
 
-
+def obtener_registros(fecha_inicio, fecha_fin):
+    sql = text("CALL ObtenerRegistrosEEE(:fechaInicio, :fechaFin)")
+    resultados = db.session.execute(sql, {'fechaInicio': fecha_inicio, 'fechaFin': fecha_fin}).fetchall()
+    return resultados
 
 @app.route('/registrados', methods = ['GET', 'POST'])
 def registrados():

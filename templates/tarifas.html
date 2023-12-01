@@ -52,6 +52,24 @@
             {{ form.hora_extra(class="tarifas-input") }}
             <p class="help-block text-danger"></p>     
         </div>
+        <div style="text-align: center;"><label>Tarifa por DÍA:</label></div>
+        <div class="input-group mb-3">
+            <span class="input-group-text">$</span>
+            {{ form.pension_dia(class="tarifas-input") }}
+            <p class="help-block text-danger"></p>     
+        </div>
+        <div style="text-align: center;"><label>Tarifa por SEMANA:</label></div>
+        <div class="input-group mb-3">
+            <span class="input-group-text">$</span>
+            {{ form.pension_semana(class="tarifas-input") }}
+            <p class="help-block text-danger"></p>     
+        </div>
+        <div style="text-align: center;"><label>Tarifa por MES:</label></div>
+        <div class="input-group mb-3">
+            <span class="input-group-text">$</span>
+            {{ form.pension_mes(class="tarifas-input") }}
+            <p class="help-block text-danger"></p>     
+        </div>
         {{form.honeypot}}
         <div class="form-group" style="text-align: center;">
             <input type="submit" value="Modificar">
@@ -67,6 +85,9 @@
             <th>Tiempo Tolerancia</th>
             <th>$ Dos horas</th>
             <th>$ Hora extra</th>
+            <th>$ Día</th>
+            <th>$ Semana</th>
+            <th>$ Mes</th>
         </tr>
         {% for tarifa in tarifas %}
             <tr>
@@ -74,6 +95,9 @@
                 <td>{{ tarifa.tiempo_tol }}</td>
                 <td>{{ tarifa.dos_horas }}</td>
                 <td>{{ tarifa.hora_extra }}</td>
+                <td>{{ tarifa.pension_dia }}</td>
+                <td>{{ tarifa.pension_semana }}</td>
+                <td>{{ tarifa.pension_mes }}</td>
             </tr>
         {% endfor %}  
     </table>
