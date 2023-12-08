@@ -27,6 +27,10 @@ app.config.from_object(DevelopmentConfig)
 csrf = CSRFProtect(app)
 mail = Mail()
 db.init_app(app)
+csrf.init_app(app)
+mail.init_app(app)
+with app.app_context():
+    db.create_all()
 
 def send_email(user_email, username):
     msg = Message('Gracias por tu registro!', sender=app.config['MAIL_USERNAME'], recipients=[user_email])
@@ -509,8 +513,8 @@ def calcular_salida():
                 if boleto.usuario == nombre:
 
                     hora_entrada = datetime.strptime(str(boleto.hora_entrada), '%Y-%m-%d %H:%M:%S')
-                    #hora_salida = datetime.strptime(str(request.form['hora_salida']), '%Y-%m-%dT%H:%M')
-                    hora_salida = datetime.now()
+                    hora_salida = datetime.strptime(str(request.form['hora_salida']), '%Y-%m-%dT%H:%M')
+                    #hora_salida = datetime.now()
 
 
                     tiempo = hora_salida - hora_entrada
@@ -660,10 +664,5 @@ def ajax_login():
 
 
 if __name__ == '__main__':
-    csrf.init_app(app)
-    mail.init_app(app)
-
-    with app.app_context():
-        db.create_all()
 
     app.run(port=8000)

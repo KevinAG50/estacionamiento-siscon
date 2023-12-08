@@ -8,13 +8,13 @@ db = SQLAlchemy()
 
 
 class User(db.Model):
-    __tablename__ = 'Usuarios'
+    __tablename__ = 'usuarios'
 
     idUsuario = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(25), unique=True)
     email = db.Column(db.String(50))
     password = db.Column(db.String(200))
-    estacionamiento = db.Column(db.String(25), db.ForeignKey('Estacionamientos.nombreE'))
+    estacionamiento = db.Column(db.String(25), db.ForeignKey('estacionamientos.nombreE'))
     privilegio = db.Column(db.String(50))
     create_date = db.Column(db.DateTime, default=datetime.datetime.now)
 
@@ -33,7 +33,7 @@ class User(db.Model):
 
 
 class Estacionamientos(db.Model):
-    __tablename__ = 'Estacionamientos'
+    __tablename__ = 'estacionamientos'
 
     idEstacionamiento = db.Column(db.Integer, primary_key=True)
     nombreE = db.Column(db.String(25), unique=True)
@@ -49,7 +49,7 @@ class Estacionamientos(db.Model):
 
 
 class Tarifas(db.Model):
-    __tablename__ = 'Tarifas'
+    __tablename__ = 'tarifas'
 
     idTarifa = db.Column(db.Integer, primary_key=True)
     tiempo_tol = db.Column(db.Integer)
@@ -58,7 +58,7 @@ class Tarifas(db.Model):
     pension_dia = db.Column(db.Integer)
     pension_semana = db.Column(db.Integer)
     pension_mes = db.Column(db.Integer)
-    estacionamiento = db.Column(db.String(25), db.ForeignKey('Estacionamientos.nombreE'))
+    estacionamiento = db.Column(db.String(25), db.ForeignKey('estacionamientos.nombreE'))
     
     def __init__(self, tiempo_tol, dos_horas, hora_extra, pension_dia, pension_mes, pension_semana, estacionamiento):
         self.tiempo_tol = tiempo_tol
@@ -71,7 +71,7 @@ class Tarifas(db.Model):
 
 
 class Boletos(db.Model):
-    __tablename__ = 'Boletos'
+    __tablename__ = 'boletos'
 
     idBoleto = db.Column(db.Integer, primary_key=True)
     usuario = db.Column(db.String(25))
@@ -80,7 +80,7 @@ class Boletos(db.Model):
     tarifa = db.Column(db.Integer)
     estatus = db.Column(db.String(25))
     qr_code = db.Column(LargeBinary)
-    estacionamiento = db.Column(db.String(25), db.ForeignKey('Estacionamientos.nombreE'))
+    estacionamiento = db.Column(db.String(25), db.ForeignKey('estacionamientos.nombreE'))
 
     def __init__(self, usuario, hora_entrada, hora_salida, tarifa, estatus, estacionamiento):
         self.usuario = usuario
@@ -92,12 +92,12 @@ class Boletos(db.Model):
 
 
 class Pagos(db.Model):
-    __tablename__ = 'Pagos'
+    __tablename__ = 'pagos'
 
     idPago = db.Column(db.Integer, primary_key=True)
     usuario = db.Column(db.String(25))
     total_pago = db.Column(db.Integer)
-    estacionamiento = db.Column(db.String(25), db.ForeignKey('Estacionamientos.nombreE'))
+    estacionamiento = db.Column(db.String(25), db.ForeignKey('estacionamientos.nombreE'))
 
     def __init__(self, usuario, total_pago, estacionamiento):
         self.usuario = usuario
