@@ -36,7 +36,7 @@ def send_email(user_email, username):
 @app.errorhandler(404)
 def page_not_found(e):
     title = "Error"
-    return render_template('404.html', title = title, username = username), 404
+    return render_template('404.html', title = title), 404
 
 @app.before_request
 def before_request():
