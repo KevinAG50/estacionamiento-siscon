@@ -103,16 +103,16 @@
     <table>
         <tr>
             <th>Nombre de usuario</th>
+            <th>Privilegios</th>
             <th>Correo electrónico</th>
             <th>Estacionamiento</th>
-            <th>Fecha de creación</th>
         </tr>
         {% for usuario in usuarios %}
             <tr>
                 <td>{{ usuario.username }}</td>
+                <td>{{ usuario.privilegio }}</td>
                 <td>{{ usuario.email }}</td>
                 <td>{{ usuario.estacionamiento }}</td>
-                <td>{{ usuario.create_date }}</td>
             </tr>
         {% endfor %}  
     </table>
@@ -130,10 +130,14 @@
             {% endfor %}
         </select>
         <div style="text-align: center;" class="form-group-users">
-            <label>Nombre nuevo de usuario:</label>
-            {{ form.username }}
-            <p class="help-block text-danger"></p> 
+            <label>Privilegio del usuario:</label>
+            <select name="privilegio" class="select-modificar" required>
+                <option value="" disabled selected>Selecciona el privilegio</option>
+                <option value="cliente">Cliente de estacionamiento</option>
+                <option value="admin">Administrador</option>
+            </select>
         </div>
+    <br>
         <div class="form-group-cian" style="text-align: center;">
             <input type="submit" value="Modificar usuario">
         </div>

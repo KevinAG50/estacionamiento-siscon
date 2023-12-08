@@ -36,7 +36,6 @@ def send_email(user_email, username):
 @app.errorhandler(404)
 def page_not_found(e):
     title = "Error"
-    username = session['username']
     return render_template('404.html', title = title, username = username), 404
 
 @app.before_request
@@ -287,24 +286,20 @@ def eliminar_usuario():
 def modificar_usuario():
     if request.method == 'POST':
         idUsuario = request.form['idUsuario']
-        nombre = request.form['username']
+        privilegio = request.form['privilegio']
         usuario = User.query.get(idUsuario)
         if usuario:
             if usuario.idUsuario == 1:
                 flash(('No puedes modificar al creador de todo!', 'danger'))
             else:
-                user = User.query.filter_by(username = nombre).first()
-                if user is not None:
-                    error_message = 'El nombre de usuario ya se encuentra registrado! Utiliza otro!'
-                    flash((error_message,'danger')) 
-                else:
-                    usuario_data = {
-                    'username': nombre,
-                    }
+                
+                usuario_data = {
+                    'privilegio': privilegio,
+                }
 
-                    User.query.filter_by(idUsuario=idUsuario).update(usuario_data)
-                    db.session.commit()
-                    flash(('Usuario modificado correctamente!', 'success'))      
+                User.query.filter_by(idUsuario=idUsuario).update(usuario_data)
+                db.session.commit()
+                flash(('Usuario modificado correctamente!', 'success'))      
         else:
             flash(('No se encontró el usuario a modificar!', 'danger'))        
     return redirect(url_for('usuarios'))
