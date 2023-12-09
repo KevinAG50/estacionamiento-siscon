@@ -9,5 +9,5 @@ class Config(object):
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://admin:cisco123@siscon.czgp2s2wgrjs.us-east-1.rds.amazonaws.com/estacionamiento_siscon'    
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://admin:cisco123@siscon-db.cglfag0h6wce.us-east-1.rds.amazonaws.com/estacionamiento_siscon'    
     SQLALCHEMY_TRACK_MODIFICATIONS = False
