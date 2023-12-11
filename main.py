@@ -20,6 +20,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Image, Paragraph, Spacer
 from reportlab.lib import colors
 from reportlab.lib.units import inch
+import pytz
 import base64
 
 app = Flask(__name__)
@@ -321,7 +322,12 @@ def registrar_entrada():
     nombre = session['username']
     usuario = User.query.filter_by(username = nombre).first()
     #hora_entrada = request.form['hora_entrada']
-    hora_entrada = datetime.now()
+
+    hora_actual_utc = datetime.utcnow()
+    zona_horaria = pytz.timezone('America/Mexico_City')
+    hora_actual = hora_actual_utc.replace(tzinfo=pytz.utc).astimezone(zona_horaria)
+    hora_entrada = hora_actual.strftime('%Y-%m-%dT%H:%M')
+
     estacionamiento = Estacionamientos.query.filter_by(nombreE = usuario.estacionamiento).first()
     if request.method == 'POST':
         if estacionamiento.lugares < estacionamiento.capacidad:
@@ -447,7 +453,11 @@ def codigo(idBoleto):
             if boleto.usuario == nombre:
 
                 hora_entrada = datetime.strptime(str(boleto.hora_entrada), '%Y-%m-%d %H:%M:%S')
-                hora_salida = datetime.now()
+                hora_actual_utc = datetime.utcnow()
+                zona_horaria = pytz.timezone('America/Mexico_City')
+                hora_actual = hora_actual_utc.replace(tzinfo=pytz.utc).astimezone(zona_horaria)
+                hora_salida = hora_actual.strftime('%Y-%m-%dT%H:%M')
+
                 tiempo = hora_salida - hora_entrada
                 #Tiempo convertido a minutos
                 tiempo_mins = tiempo.total_seconds() / 60
@@ -518,8 +528,11 @@ def calcular_salida():
 
                     hora_entrada = datetime.strptime(str(boleto.hora_entrada), '%Y-%m-%d %H:%M:%S')
                     hora_salida = datetime.strptime(str(request.form['hora_salida']), '%Y-%m-%dT%H:%M')
-                    #hora_salida = datetime.now()
 
+                    #hora_actual_utc = datetime.utcnow()
+                    #zona_horaria = pytz.timezone('America/Mexico_City')
+                    #hora_actual = hora_actual_utc.replace(tzinfo=pytz.utc).astimezone(zona_horaria)
+                    #hora_salida = hora_actual.strftime('%Y-%m-%dT%H:%M')
 
                     tiempo = hora_salida - hora_entrada
                     #Tiempo convertido a minutos
@@ -588,7 +601,10 @@ def registrar_por_admin():
     variable = ""
     if request.method == 'POST':
         boleto = Boletos.query.filter_by(idBoleto = request.form['idBoleto']).first()
-        hora_salida = datetime.now()
+        hora_actual_utc = datetime.utcnow()
+        zona_horaria = pytz.timezone('America/Mexico_City')
+        hora_actual = hora_actual_utc.replace(tzinfo=pytz.utc).astimezone(zona_horaria)
+        hora_salida = hora_actual.strftime('%Y-%m-%dT%H:%M')
         if boleto is not None:
             datos_est = Estacionamientos.query.filter_by(nombreE = boleto.estacionamiento).first()
             if boleto.estatus == 'Pendiente':
